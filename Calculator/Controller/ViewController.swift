@@ -19,14 +19,10 @@ class ViewController: UIViewController {
             let displayText = displayLabel.text ?? ""
             let displayNum = Double(displayText) ?? 0
             return displayNum
-//        guard let displayText = displayLabel.text else {
-//            fatalError ("No text in the display label")}
-//        guard let displayNum = Double(displayText) else {
-//            fatalError("Can not convert display label text into a Double")}
-//        return displayNum
         }
         set {
-            displayLabel.text = String(newValue)
+            let temp = String(newValue).removeAfterPointIfZero()
+            displayLabel.text =  temp.setMaxLength(of: 12)
         }
     }
     
@@ -37,18 +33,12 @@ class ViewController: UIViewController {
         //What should happen when a non-number button is pressed
         
         isFinishedTypingNumber = true
-        
         calcLogic.setNumber(displayValue)
-        
         
         if let calcMethod = sender.currentTitle {
             
             guard let result = calcLogic.calculate(title: calcMethod) else {return}
             displayValue = result
-            
-//            if let result = calcLogic.calculate(title: calcMethod) {
-//                displayValue = result
-//            }
         }
     }
     
@@ -59,18 +49,55 @@ class ViewController: UIViewController {
         if let buttonTitle = sender.currentTitle {
             
             if isFinishedTypingNumber == true {
+                if buttonTitle == "." {
+                    displayLabel.text = "0."
+                    isFinishedTypingNumber = false
+                } else {
                 displayLabel.text = buttonTitle
                 isFinishedTypingNumber = false
-            } else {
-                if buttonTitle == "." {
-                    let isInt = floor(displayValue) == displayValue
-                    if !isInt {
-                        return
-                    }
                 }
+            } else {
+                // checking if there is already one "." on the display, if not, we add a dot, if yes - we skip
+                if buttonTitle == "." && (displayLabel.text?.range(of: ".") != nil)  { return }
                 displayLabel.text?.append(contentsOf: buttonTitle)
             }
         }
+    }
+}
+
+
+extension String {
+    // set the max length of the number to display
+    func setMaxLength(of maxLength: Int) -> String {
+        var tmp = self
+        
+        if tmp.count > maxLength {
+            var numbers = tmp.map({$0})
+            
+            if numbers[maxLength - 1] == "." {
+                numbers.removeSubrange(maxLength+1..<numbers.endIndex)
+            } else {
+                numbers.removeSubrange(maxLength..<numbers.endIndex)
+            }
+            
+            tmp = String(numbers)
+        }
+        return tmp
+    }
+    
+    // remove the '.0' when the number is not decimal
+    func removeAfterPointIfZero() -> String {
+        let token = self.components(separatedBy: ".")
+        
+        if !token.isEmpty && token.count == 2 {
+            switch token[1] {
+            case "0", "00", "000", "0000", "00000", "000000":
+                return token[0]
+            default:
+                return self
+            }
+        }
+        return self
     }
 }
 
