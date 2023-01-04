@@ -21,8 +21,9 @@ class ViewController: UIViewController {
             return displayNum
         }
         set {
-            let temp = String(newValue).removeAfterPointIfZero()
-            displayLabel.text =  temp.setMaxLength(of: 12)
+            // rounding the result to 10 digits max after decimal point
+            let roundedValue = Double(round(10000000000 * newValue) / 10000000000)
+            displayLabel.text = String(roundedValue).removeAfterPointIfZero()
         }
     }
     
@@ -52,13 +53,15 @@ class ViewController: UIViewController {
                 if buttonTitle == "." {
                     displayLabel.text = "0."
                     isFinishedTypingNumber = false
+                } else if buttonTitle == "0" && displayLabel.text == "0" {
+                    return
                 } else {
-                displayLabel.text = buttonTitle
-                isFinishedTypingNumber = false
+                    displayLabel.text = buttonTitle
+                    isFinishedTypingNumber = false
                 }
             } else {
                 // checking if there is already one "." on the display, if not, we add a dot, if yes - we skip
-                if buttonTitle == "." && (displayLabel.text?.range(of: ".") != nil)  { return }
+                if buttonTitle == "." && (displayLabel.text?.range(of: ".") != nil) { return }
                 displayLabel.text?.append(contentsOf: buttonTitle)
             }
         }
@@ -67,25 +70,6 @@ class ViewController: UIViewController {
 
 
 extension String {
-    // set the max length of the number to display
-    func setMaxLength(of maxLength: Int) -> String {
-        var tmp = self
-        
-        if tmp.count > maxLength {
-            var numbers = tmp.map({$0})
-            
-            if numbers[maxLength - 1] == "." {
-                numbers.removeSubrange(maxLength+1..<numbers.endIndex)
-            } else {
-                numbers.removeSubrange(maxLength..<numbers.endIndex)
-            }
-            
-            tmp = String(numbers)
-        }
-        return tmp
-    }
-    
-    // remove the '.0' when the number is not decimal
     func removeAfterPointIfZero() -> String {
         let token = self.components(separatedBy: ".")
         
